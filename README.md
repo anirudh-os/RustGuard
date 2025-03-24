@@ -85,6 +85,33 @@ cargo run delete_rule destination_ip 8.8.8.8
 cargo run delete_rule port_range 1000 2000
 ```
 
+## Future Improvements
+
+- **Support for PCAP/JSON Input**  
+  Allow the simulator to read real or simulated packet data from `.pcap` (using `pnet` or `pcap-parser`) or `.json` files. This enables batch simulation of network traffic instead of passing individual packets via CLI.
+
+- **Logging Mechanism**  
+  Add a logging module that records allowed or denied traffic with timestamps and reasons (e.g., "Denied: Port not allowed").
+
+- **Interactive CLI / REPL Mode**  
+  Implement an interactive shell (REPL) for managing rules, simulating traffic, and viewing logs more efficiently.
+
+- **Rule Expiration**  
+  Add support for rules that expire after a certain time or number of hits. Useful for dynamic rule application.
+
+- **Better Rule Matching Logic**  
+  Improve matching to include support for IP ranges (CIDR blocks), wildcard ports, or fuzzy matches.
+
+- **Rule Priority**  
+  Enable assigning priority levels to rules so that conflicting rules are resolved based on precedence.
+
+- **Live Packet Capture**  
+  Integrate live traffic inspection using libraries like `libpnet`, allowing the simulator to inspect actual packets in real time (with sudo privileges).
+
+- **Web Interface**  
+  A lightweight web-based UI to visualize and manage rules, logs, and simulated traffic for more accessibility.
+
+
 Contributing
 ------------
 

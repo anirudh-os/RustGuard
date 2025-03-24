@@ -45,5 +45,23 @@ impl Firewall {
         false
     }
 
-    // Deletion methods can go here (optional)
+    fn delete_rule_by_index(index: usize, firewall: &mut Firewall) {
+        firewall.rules.remove(index);
+    }
+
+    pub fn delete_rule_by_protocol(protocol: Protocol, firewall: &mut Firewall) {
+        firewall.rules.retain(|x| x.protocol != protocol);
+    }
+
+    pub fn delete_rule_by_source_ip(source_ip: &str, firewall: &mut Firewall) {
+        firewall.rules.retain(|x| x.source_ip != source_ip);
+    }
+
+    pub fn delete_rule_by_destination_ip(destination_ip: &str, firewall: &mut Firewall) {
+        firewall.rules.retain(|x| x.destination_ip != destination_ip);
+    }
+
+    pub fn delete_rule_by_port_range(starting_port_number: u32, ending_port_number: u32, firewall: &mut Firewall) {
+        firewall.rules.retain(|x| x.starting_port_number != starting_port_number || x.ending_port_number != ending_port_number);
+    }
 }

@@ -5,11 +5,28 @@ You can add, list, delete rules, and simulate network traffic to test against th
 
 ---
 
-## Build
+## Features
 
-To compile the project in debug mode:
+- Add new firewall rules
+- View current rules in a readable format
+- Delete rules by various criteria
+- Simulate network traffic to check against rules
+- Persistent rule storage using JSON
 
+---
+
+## Requirements
+
+- Rust 
+- `serde`, `serde_json`, and `clap` crates
+
+## Installation
+
+- Make sure you have Rust installed.
+- Clone the repository and build the project:
 ```bash
+git clone https://github.com/anirudh-os/RustGuard.git
+cd RustGuard
 cargo build
 ```
 
@@ -67,3 +84,22 @@ cargo run -- delete_rule --by destination_ip --value 8.8.8.8
 # Delete by port range
 cargo run -- delete_rule --by port_range --start 1000 --end 2000
 ```
+
+Contributing
+------------
+
+Contributions are welcome! If you'd like to improve this project, follow these steps:
+
+1.  Fork the repository.
+
+2.  Create a new branch (`git checkout -b feature-name`).
+
+3.  Make your changes.
+
+4.  Commit your changes (`git commit -m 'Add feature'`).
+
+5.  Push to your fork (`git push origin feature-name`).
+
+6.  Open a pull request.
+
+Make sure your code is formatted (`cargo fmt`) and passes clippy checks (`cargo clippy`) before submitting.

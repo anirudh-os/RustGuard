@@ -7,17 +7,26 @@ use firewall::packet::Packet;
 use clap::{arg, Command};
 use serde_json;
 use std::fs::File;
-use std::io::{self, read_to_string, Write};
-use serde::de::Error;
 
-fn read_json_file(firewall: &mut Firewall, filepath: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn read_json_file(firewall: &mut Firewall, filepath: &str) -> Result<bool, Box<dyn std::error::Error>> {
     let file = File::open(filepath)?;
-    let parsed: Vec<Rule> = serde_json::from_reader(file)?;
-    firewall.rules.extend(parsed);
-    Ok(())
+    match serde_json::from_reader::<_, Vec<Rule>>(file) {
+        Ok(parsed) => {
+            let is_empty = parsed.is_empty();
+            firewall.rules.extend(parsed);
+            Ok(is_empty)
+        }
+        Err(e) => {
+            if e.is_eof() {
+                Ok(true) // treat as empty
+            } else {
+                Err(Box::new(e))
+            }
+        }
+    }
 }
 
-fn write_json_file(firewall: Firewall, filepath: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn write_json_file(firewall: &Firewall, filepath: &str) -> Result<(), Box<dyn std::error::Error>> {
     let file = File::create(filepath)?;
     serde_json::to_writer_pretty(file, &firewall.rules)?;
     Ok(())
@@ -46,16 +55,44 @@ fn main() {
             Command::new("simulate_traffic")
                 .about("Simulate network traffic")
                 .arg(arg!(--protocol <PROTOCOL> "Protocol: TCP or UDP"))
-                .arg(arg!(--port <PORT> "Port number").value_parser(clap::value_parser!(u16)))
+                .arg(arg!(--port <PORT> "Port number").value_parser(clap::value_parser!(u32)))
                 .arg(arg!(--source <SOURCE> "Source IP address"))
                 .arg(arg!(--destination <DESTINATION> "Destination IP address"))
         )
-        .get_matches();
+        .subcommand(
+        Command::new("delete_rule")
+            .about("Delete a firewall rule")
+            .subcommand(
+                Command::new("index")
+                    .arg(arg!(<INDEX> "Index of the rule to delete").value_parser(clap::value_parser!(usize)))
+            )
+            .subcommand(
+                Command::new("protocol")
+                    .arg(arg!(<PROTOCOL> "Protocol: TCP or UDP"))
+            )
+            .subcommand(
+                Command::new("source_ip")
+                    .arg(arg!(<IP> "Source IP to delete"))
+            )
+            .subcommand(
+                Command::new("destination_ip")
+                    .arg(arg!(<IP> "Destination IP to delete"))
+            )
+            .subcommand(
+                Command::new("port_range")
+                    .arg(arg!(<START> "Start port").value_parser(clap::value_parser!(u32)))
+                    .arg(arg!(<END> "End port").value_parser(clap::value_parser!(u32)))
+            )
+    ).get_matches();
 
     let mut firewall = Firewall::new();
-    match read_json_file(&mut firewall, "rules.json") {
-        Err(e) => println!("An error {} occurred!", e),
-        _  => {}
+    match read_json_file(&mut firewall, "src/rules.json") {
+        Ok(empty) => {
+            if empty && matches.subcommand_name() != Some("add_rule") {
+                println!("rules.json is empty. Please add rules.");
+            }
+        },
+        Err(e) => println!("An error {:#?} occurred!", e),
     }
 
     if let Some(matches) = matches.subcommand_matches("add_rule") {
@@ -116,5 +153,44 @@ fn main() {
 
         let result = firewall.filter(packet);
         println!("{}", if result { "Packet allowed." } else { "Packet denied." });
+    }
+
+    if let Some(delete_matches) = matches.subcommand_matches("delete_rule") {
+        match delete_matches.subcommand() {
+            Some(("index", sub_m)) => {
+                let index = *sub_m.get_one::<usize>("INDEX").unwrap();
+                Firewall::delete_rule_by_index(index, &mut firewall);
+            }
+            Some(("protocol", sub_m)) => {
+                let proto = sub_m.get_one::<String>("PROTOCOL").unwrap().to_lowercase();
+                let protocol = match proto.as_str() {
+                    "tcp" => Protocol::TCP,
+                    "udp" => Protocol::UDP,
+                    _ => {
+                        println!("Invalid protocol.");
+                        return;
+                    }
+                };
+                Firewall::delete_rule_by_protocol(protocol, &mut firewall);
+            }
+            Some(("source_ip", sub_m)) => {
+                let ip = sub_m.get_one::<String>("IP").unwrap();
+                Firewall::delete_rule_by_source_ip(ip, &mut firewall);
+            }
+            Some(("destination_ip", sub_m)) => {
+                let ip = sub_m.get_one::<String>("IP").unwrap();
+                Firewall::delete_rule_by_destination_ip(ip, &mut firewall);
+            }
+            Some(("port_range", sub_m)) => {
+                let start = *sub_m.get_one::<u32>("START").unwrap();
+                let end = *sub_m.get_one::<u32>("END").unwrap();
+                Firewall::delete_rule_by_port_range(start, end, &mut firewall);
+            }
+            _ => println!("Invalid delete command."),
+        }
+    }
+
+    if let Err(e) = write_json_file(&firewall, "src/rules.json") {
+        println!("An error {} occurred!", e);
     }
 }

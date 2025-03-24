@@ -1,6 +1,7 @@
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone)]
 pub enum Protocol {
     TCP,
     UDP,
@@ -9,13 +10,14 @@ pub enum Protocol {
 }
 
 #[derive(Debug)]
+#[derive(Serialize, Deserialize, Clone)]
 pub enum Action {
     Allow,
     Deny,
 }
 
 #[derive(Debug)]
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Rule {
     pub action: Action,
     pub protocol: Protocol,

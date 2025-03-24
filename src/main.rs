@@ -18,8 +18,9 @@ fn read_json_file(firewall: &mut Firewall, filepath: &str) -> Result<(), Box<dyn
 }
 
 fn write_json_file(firewall: Firewall, filepath: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let file = File::open(filepath)?;
-    
+    let file = File::create(filepath)?;
+    serde_json::to_writer_pretty(file, &firewall.rules)?;
+    Ok(())
 }
 
 fn main() {

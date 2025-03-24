@@ -70,19 +70,19 @@ cargo run simulate_traffic --protocol TCP --port 1123 --source 192.168.1.2 --des
 
 ```bash
 # Delete by index
-cargo run -- delete_rule --by index --value 0
+cargo run delete_rule index 0
 
 # Delete by protocol (TCP or UDP)
-cargo run -- delete_rule --by protocol --value TCP
+cargo run delete_rule protocol TCP
 
 # Delete by source IP address
-cargo run -- delete_rule --by source_ip --value 192.168.1.1
+cargo run delete_rule source_ip 192.168.1.1
 
 # Delete by destination IP address
-cargo run -- delete_rule --by destination_ip --value 8.8.8.8
+cargo run delete_rule destination_ip 8.8.8.8
 
 # Delete by port range
-cargo run -- delete_rule --by port_range --start 1000 --end 2000
+cargo run delete_rule port_range 1000 2000
 ```
 
 Contributing
